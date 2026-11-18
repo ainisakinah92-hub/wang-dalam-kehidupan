@@ -128,11 +128,60 @@ h=`<div class="card"><h2 id="hd" tabindex="-1">${t.res}</h2>${bar(t.lab.life,ans
 app.innerHTML=h+(step?`<footer class="muted">${t.src}</footer>`:"");
 $("#l-ms").setAttribute("aria-pressed",lang==="ms");$("#l-en").setAttribute("aria-pressed",lang==="en");
 const hd=$("#hd");if(hd&&step&&shown!==step)hd.focus({preventScroll:true});shown=step}
-app.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
-if(b.id==="go"||b.id==="nx"){step++;render()}
-else if(b.id==="bk"){step--;render()}
-else if(b.id==="re"){for(const k in ans)delete ans[k];step=0;render()}
-else if(b.dataset.v){ans[Q[step-1]]=+b.dataset.v;render()}});
+app.addEventListener("click", async e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+
+  if (b.id === "go") {
+    step++;
+    render();
+  }
+  else if (b.id === "nx") {
+    if (step === 10) {
+      b.disabled = true;
+      b.textContent = "Submitting...";
+
+      const responseData = {
+        ...ans,
+        language: lang
+      };
+
+      try {
+        await fetch("https://script.google.com/macros/s/AKfycbyuLnE2sXBeMVTVuD5dIRMUEvOouyuG93tX49FxWJa6_3tHSAMUJ96rAVzt1V4JbZDP/exec", {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(responseData)
+        });
+
+        step++;
+        render();
+      } catch (error) {
+        b.disabled = false;
+        b.textContent = T[lang].see;
+        alert("Submission failed. Please try again.");
+      }
+    } else {
+      step++;
+      render();
+    }
+  }
+  else if (b.id === "bk") {
+    step--;
+    render();
+  }
+  else if (b.id === "re") {
+    for (const k in ans) delete ans[k];
+    step = 0;
+    render();
+  }
+  else if (b.dataset.v) {
+    ans[Q[step - 1]] = +b.dataset.v;
+    render();
+  }
+});
 app.addEventListener("input",e=>{if(e.target.id!=="sl")return;ans.hh=+e.target.value;$("#amt").textContent=fmt(ans.hh);const n=$("#nx");if(n)n.disabled=false});
 $("#l-ms").onclick=()=>{lang="ms";render()};$("#l-en").onclick=()=>{lang="en";render()};
 render();
